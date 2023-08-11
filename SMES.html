@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SMES DEMO (JSAPI)</title>
+
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.27/"></script>
+    
+    <script>
+        function base64ToBlob(base64, type = "application/pdf") {
+            const binaryString = window.atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return new Blob([bytes], { type });
+        }
+
+        require([
+            "esri/config",
+            "esri/WebMap",
+            "esri/views/MapView",
+            "esri/layers/FeatureLayer",
+            "esri/core/reactiveUtils",
+            "esri/widgets/Search",
+            "esri/widgets/Locate",
+        ], function (esriConfig, WebMap, MapView, FeatureLayer, reactiveUtils, Search, Locate) {
+            esriConfig.apiKey = "AAPKbe0af2746739408e89d064554a42cd6aYF-Y1QLK40NfxVI68hIN8WHIxnBDCkDwxMjzMPFYzjeRVylKrB01wQApo1ztmAq4";
+
+            const uniqueValueRenderer = {
+                type: "unique-value",
+                field: "symbol",
+                uniqueValueInfos: [
+                    {
+                        value: "NA",
+                        symbol: {
+                            type: "picture-marker",
+                            url: "https://i.ibb.co/RTHCkPZ/non-SCN-n-AHD.png",
+                        }
+                    },
+                    {
+                        value: "SP",
+                        symbol: {
+                            type: "picture-marker",
+                            url: "https://i.ibb.co/JHJ449t/pcm-nahd.png",
+                        }
+                    },
+                    {
+                        value: "SC",
+                        symbol: {
+                            type: "picture-marker",
+                            url: "https://i.ibb.co/RTHCkPZ/non-SCN-n-AHD.png",
+                        }
+                    },
+                    {
+                        value: "D",
+                        symbol: {
+                            type: "picture-marker",
+                            url: "https://i.ibb.co/FhRr8GT/defective.png",
+                        }
+                    },
+                    {
+                        value: "NS",
+                        symbol: {
+                            type: "picture-marker",
+                            url: "https://i.ibb.co/RTHCkPZ/non-SCN-n-AHD.png",
+                        }
+                    },
+                    {
+                        value: "ASC",
+                        symbol: {
+                            type: "picture-marker",
+                            url: "https://i.ibb.co/W0FsM5T/PM-estahd.png",
+                        }
+                    },
+                    {
+                        value: "SST",
+                        symbol: {
+                            type: "picture-marker",
+                            url: "https://i.ibb.co/W0FsM5T/PM-estahd.png",
+                        }
+                    },
+                    {
+                        value: "ASCT",
+                        symbol: {
+                            type: "picture-marker",
+                            url: "https://i.ibb.co/QPfDq18/PM.png",
+                        }
+                    },
+                    {
+                        value: "SCT",
+                        symbol: {
+                            type: "picture-marker",
+                            url: "https://i.ibb.co/W0FsM5T/PM-estahd.png",
+                        }
+                    },
+                    {
+                        value: "ST",
+                        symbol: {
+                            type: "picture-marker",
+                            url: "https://i.ibb.co/W0FsM5T/PM-estahd.png",
+                        }
+                    },
+                ]
+            };
+
+            const labelsmes = {
+                symbol: {
+                    type: "text",
+                    color: "#5E8D74",
+                    font: {
+                        size: "12px",
+                        family: "Noto Sans",
+                        style: "normal",
+                        weight: "normal"
+                    }
+                },
+                labelPlacement: "above-center",
+                labelExpressionInfo: {
+                    expression: "$feature.name"
+                }
+            };
+
+            const downloadPdfAction = {
+                title: "Download Sketch PDF",
+                id: "download-pdf",
+                className: "esri-icon-download"
+            };
+
+            const popupTemplate = {
+                "title": "PM Details",
+                "content": [{
+                    type: "fields",
+                    fieldInfos: [
+                        {
+                            fieldName: "name",
+                            label: "Name"
+                        },
+                        {
+                            fieldName: "mga2020_easting",
+                            label: "MGA 2020 Easting",
+                            format: {
+                                places: 3
+                            }
+                        },
+                        {
+                            fieldName: "mga2020_northing",
+                            label: "MGA 2020 Northing",
+                            format: {
+                                places: 3
+                            }
+                        },
+                    ]
+                }],
+                "actions": [downloadPdfAction]
+            };
+
+            const SMES = new FeatureLayer({
+                url: "https://services6.arcgis.com/GB33F62SbDxJjwEL/arcgis/rest/services/Vicmap_Position/FeatureServer",
+                outFields: ["name", "ahd_height", "mga2020_easting", "mga2020_northing", "nine_figure_no", "symbol"],
+                popupTemplate: popupTemplate,
+                minScale: 50000,
+                renderer: uniqueValueRenderer,
+                labelingInfo: [labelsmes]
+            });
+
+            const webmap = new WebMap({
+                portalItem: {
+                    id: "ce9963967c4c4183aec5d88f0b362149"
+                }
+            });
+
+            webmap.add(SMES);
+
+            const view = new MapView({
+                container: "viewDiv",
+                map: webmap
+            });
+
+            const searchWidget = new Search({
+                view: view
+            });
+
+            view.ui.add(searchWidget, {
+                position: "top-left",
+                index: 2
+            });
+
+            const locate = new Locate({
+                view: view,
+                useHeadingEnabled: false,
+                goToOverride: function(view, options) {
+                    options.target.scale = 1500;
+                    return view.goTo(options.target);
+                }
+            });
+
+            view.ui.add(locate, "top-right");
+
+            reactiveUtils.on(
+                () => view.popup,
+                "trigger-action",
+                (event) => {  
+                    if (event.action.id === "download-pdf") {
+                        const ninefig = view.popup.selectedFeature.attributes.NINE_FIGURE_NO;
+                        fetch(`https://maps.land.vic.gov.au/lvis/services/smesDataDelivery/getSurveyMarkSketches?markList=${ninefig}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                const blobData = base64ToBlob(data.data[0].document);
+                                const link = document.createElement('a');
+                                link.href = URL.createObjectURL(blobData);
+                                link.download = "download.pdf";
+                                link.click();
+                            })
+                            .catch(error => console.error("There was an error fetching the PDF:", error));
+                    }
+                }
+            );
+        });
+    </script>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+</body>
+
+</html>
