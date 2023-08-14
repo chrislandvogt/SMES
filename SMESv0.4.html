@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>SMES DEMO (JSAPI)</title>
+    <style>
+        html, body, #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+        /* width & color of legend */
+        div.esri-component.esri-legend.esri-widget.esri-widget--panel {
+            max-width: 175px;
+            background-color: rgba(255,255,255,0.8);
+        }
+        /* Default symbol size for larger devices */
+.symbol {
+  width: 20px;
+  height: 20px;
+}
+
+/* Larger symbol size for smaller devices */
+@media (max-width: 768px) {
+  .symbol {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="https://js.arcgis.com/4.27/"></script>
+    <script>
+        function base64ToBlob(base64, type = "application/pdf") {
+            const binaryString = window.atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return new Blob([bytes], { type });
+        }
+        require([
+            "esri/config",
+            "esri/WebMap",
+            "esri/views/MapView",
+            "esri/layers/FeatureLayer",
+            "esri/core/reactiveUtils",
+            "esri/widgets/Search",
+            "esri/widgets/Locate",
+            "esri/widgets/LayerList",
+            "esri/widgets/Legend",
+            "esri/layers/support/FeatureFilter",
+            "esri/form/elements/inputs/SwitchInput",
+        ], function (esriConfig, WebMap, MapView, FeatureLayer, reactiveUtils, Search, Locate, LayerList, Legend, FeatureFilter, SwitchInput) {  
+           
+            const SimpleRenderer = {
+                type: "simple",
+                  symbol: {
+                    type: "simple-line",
+                    color: "rgba(0,76,115,0)",
+                    width: "2px",
+                            }
+                              };
+            
+            const uniqueValueRenderer = {
+                type: "unique-value",
+                field: "symbol",
+                uniqueValueInfos: [
+                    {
+                        value: "NA",
+                        label: "Non-SCN (GDA)",
+                        symbol: {
+                            type: "picture-marker",
+                            url: "https://i.ibb.co/RTHCkPZ/non-SCN-n-AHD.png",
+                        }
+                    },
+                    {
+                        value: "SP",
+                        label: "PCM",
+                        symbol: {
+                            type: "picture-marker",
+                            url: "https://i.ibb.co/JHJ449t/pcm-nahd.png",
+                        }
+                    },
+                    {
+                        value: "SC",
+                        label: "Non-SCN (GDA) & AHD mark",
+                        symbol: {
+                            type: "picture-marker",
+                            url: "https://i.ibb.co/k3wLJTw/SC-ASC.png",
+                        }
+                    },
+                    {
+                        value: "NS",
+                        label: "Non-SCN (GDA) & Estimated AHD",
+                        symbol: {
+                            type: "picture-marker",
+                            url: "https://i.ibb.co/vv3c7JH/NS.png",
+                        }
+                    },
+                    {
+                        value: "ASC",
+                        label: "Non-SCN (GDA) & Adjusted AHD mark",
+                        symbol: {
+                            type: "picture-marker",
+                            url: "https://i.ibb.co/k3wLJTw/SC-ASC.png",
+                        }
+                    },
+                    {
+                        value: "SST",
+                        label: "SCN (GDA) & Estimated AHD",
+                        symbol: {
+                            type: "picture-marker",
+                            url: "https://i.ibb.co/W0FsM5T/PM-estahd.png",
+                        }
+                    },
+                    {
+                        value: "ASCT",
+                        label: "SCN (GDA) & Adjusted AHD mark ",
+                        symbol: {
+                            type: "picture-marker",
+                            url: "https://i.ibb.co/QPfDq18/PM.png",
+                        }
+                    },
+                    {
+                        value: "SCT",
+                        label: "Non-SCN (GDA)",
+                        symbol: {
+                            type: "picture-marker",
+                            url: "https://i.ibb.co/fQpWQf3/SCT.png",
+                        }
+                    },
+                    {
+                        value: "ST",
+                        label: "Non-SCN (GDA)",
+                        symbol: {
+                            type: "picture-marker",
+                            url: "https://i.ibb.co/qyBtF5h/pm-nahd.png",
+                        }
+                    },
+                    {
+                        value: "D",
+                        label: "Defective",
+                        symbol: {
+                            type: "picture-marker",
+                            url: "https://i.ibb.co/FhRr8GT/defective.png",
+                        }
+                    },
+                ]
+            };
+
+            const labelsmes = {
+                symbol: {
+                    type: "text",
+                    color: "#5E8D74",
+                    font: {
+                        size: "12px",
+                        family: "Noto Sans",
+                        style: "normal",
+                        weight: "normal"
+                    }
+                },
+                labelPlacement: "above-center",
+                labelExpressionInfo: {
+                    expression: "$feature.name"
+                }
+            };
+
+            const labelprop = {
+                symbol: {
+                    type: "text",
+                    color: "#5E8D74",
+                    font: {
+                        size: "8px",
+                        family: "Noto Sans",
+                        style: "normal",
+                        weight: "normal"
+                    }
+                },
+                labelPlacement: "always-horizontal",
+                labelExpressionInfo: {
+                    expression: "$feature.parcel_spi"
+                }
+            };
+
+            const downloadPdfAction = {
+                title: "Download Sketch PDF",
+                id: "download-pdf",
+                className: "esri-icon-download"
+            };
+
+            const popupTemplate = {
+                "title": "PM Details",
+                "content": [{
+                    type: "fields",
+                    fieldInfos: [
+                        {
+                            fieldName: "name",
+                            label: "Name"
+                        },
+                        {
+                            fieldName: "mga2020_easting",
+                            label: "MGA 2020 Easting",
+                            format: {
+                                places: 3
+                            }
+                        },
+                        {
+                            fieldName: "mga2020_northing",
+                            label: "MGA 2020 Northing",
+                            format: {
+                                places: 3
+                            }
+                        },
+                        {
+                            fieldName: "ahd_height",
+                            label: "AHD Height",
+                            format: {
+                                places: 3
+                            }
+                        },
+                        {
+                            fieldName: "GDA94_UNCERTAINTY",
+                            label: "Horzizontal uncertainty",
+                            format: {
+                                places: 3
+                            }
+                        },
+                        {
+                            fieldName: "V_UNCERTAINTY",
+                            label: "Vertical uncertainty",
+                            format: {
+                                places: 3
+                            }
+                        },
+                    ]
+                }],
+                "actions": [downloadPdfAction]
+            };
+
+            const SMES = new FeatureLayer({
+                url: "https://services6.arcgis.com/GB33F62SbDxJjwEL/arcgis/rest/services/Vicmap_Position/FeatureServer",
+                outFields: ["name", "ahd_height", "mga2020_easting", "mga2020_northing", "nine_figure_no", "symbol"],
+                popupTemplate: popupTemplate,
+                minScale: 50000,
+                renderer: uniqueValueRenderer,
+                labelingInfo: [labelsmes]
+            });
+
+
+            const parcel = new FeatureLayer({
+                url: "https://enterprise.mapshare.vic.gov.au/server/rest/services/Vicmap_Parcel/MapServer",
+                minScale: 5000,
+                renderer: SimpleRenderer,
+                labelingInfo: [labelprop]
+            });
+
+            const webmap = new WebMap({
+                    basemap: "topo-vector"
+                });
+
+
+            webmap.add(SMES);
+            webmap.add(parcel);
+
+            const view = new MapView({
+                container: "viewDiv",
+                map: webmap,
+                center: [144.95608778666826,-37.79451232606005], // Longitude, Latitude for Parkville
+                zoom: 18
+});
+
+            view.ui.move("zoom", "top-right");
+
+
+// Creating switchContainer
+const switchContainer = document.createElement("div");
+switchContainer.style.position = "absolute";
+switchContainer.style.top = "60px";
+switchContainer.style.left = "25px";
+switchContainer.style.background = "rgba(255,255,255,0.7)";
+switchContainer.style.padding = "10px";
+switchContainer.style.zIndex = "1";
+document.body.appendChild(switchContainer);
+
+// Creating first switch
+const switchDiv1 = document.createElement("div");
+const switchLabel1 = document.createElement('label');
+switchLabel1.innerHTML = "AHD levelling only";
+const switchInput1 = document.createElement('input');
+switchInput1.type = "checkbox";
+switchInput1.id = "toggleLayer1";
+switchDiv1.appendChild(switchInput1);
+switchDiv1.appendChild(switchLabel1);
+switchContainer.appendChild(switchDiv1);
+switchLabel1.style.fontSize = "12px"; 
+
+// Event listener for first switch
+view.whenLayerView(SMES).then(function (featureLayerView) {
+    switchInput1.addEventListener("change", function () {
+        if (switchInput1.checked) {
+            featureLayerView.filter = new FeatureFilter({
+                where: "V_ORDER >= 1 AND V_ORDER <= 3 AND status = 'OK'"
+            });
+        } else {
+            featureLayerView.filter = null;
+        }
+    });
+});
+
+// Creating second switch
+const switchDiv2 = document.createElement("div");
+const switchLabel2 = document.createElement('label');
+switchLabel2.innerHTML = "Coordinated MGA/SCN only";
+const switchInput2 = document.createElement('input');
+switchInput2.type = "checkbox";
+switchInput2.id = "toggleLayer2";
+switchDiv2.appendChild(switchInput2);
+switchDiv2.appendChild(switchLabel2);
+switchContainer.appendChild(switchDiv2);
+switchLabel2.style.fontSize = "12px";
+
+// Event listener for second switch
+view.whenLayerView(SMES).then(function (featureLayerView) {
+    switchInput2.addEventListener("change", function () {
+        if (switchInput2.checked) {
+            featureLayerView.filter = new FeatureFilter({
+                where: "scn_gda = 'YES' AND status = 'OK'"
+            });
+        } else {
+            featureLayerView.filter = null;
+        }
+    });
+});
+
+// Creating third switch
+const switchDiv3 = document.createElement("div");
+const switchLabel3 = document.createElement('label');
+switchLabel3.innerHTML = "Hide defective marks";
+const switchInput3 = document.createElement('input');
+switchInput3.type = "checkbox";
+switchInput3.id = "toggleLayer2";
+switchInput3.checked = true; // Set the switch on by default
+switchDiv3.appendChild(switchInput3);
+switchDiv3.appendChild(switchLabel3);
+switchContainer.appendChild(switchDiv3);
+switchLabel3.style.fontSize = "12px";
+
+// Event listener for third switch
+view.whenLayerView(SMES).then(function (featureLayerView) {
+    // Apply the filter right away since the switch is on by default
+    featureLayerView.filter = new FeatureFilter({
+        where: "symbol <> 'D'"
+    });
+
+    switchInput3.addEventListener("change", function () {
+        if (switchInput3.checked) {
+            featureLayerView.filter = new FeatureFilter({
+                where: "symbol <> 'D'"
+            });
+        } else {
+            featureLayerView.filter = null;
+        }
+    });
+});
+
+
+
+                            // Append the switch container to the body
+                            document.body.appendChild(switchContainer);
+
+
+                            var legend = new Legend({
+                                view: view,
+                                layerInfos: [{
+                                    layer: SMES,
+                                    title: " "
+                                }]
+                                });
+                                view.ui.add(legend, "bottom-left");
+
+
+            const searchWidget = new Search({
+                view: view
+            });
+
+            view.ui.add(searchWidget, {
+                position: "top-left",
+                index: 2
+            });
+
+            const locate = new Locate({
+                view: view,
+                useHeadingEnabled: false,
+                goToOverride: function(view, options) {
+                    options.target.scale = 1500;
+                    return view.goTo(options.target);
+                }
+            });
+
+            view.ui.add(locate, "top-right");
+
+            reactiveUtils.on(
+                () => view.popup,
+                "trigger-action",
+                (event) => {  
+                    if (event.action.id === "download-pdf") {
+                        const ninefig = view.popup.selectedFeature.attributes.NINE_FIGURE_NO;
+                        const pmnam = view.popup.selectedFeature.attributes.NAME;
+                        fetch(`https://maps.land.vic.gov.au/lvis/services/smesDataDelivery/getSurveyMarkSketches?markList=${ninefig}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                const blobData = base64ToBlob(data.data[0].document);
+                                const link = document.createElement('a');
+                                link.href = URL.createObjectURL(blobData);
+                                link.download = pmnam + ".pdf";
+                                link.click();
+                            })
+                            .catch(error => console.error("There was an error fetching the PDF:", error));
+                    }
+                }
+            );
+        });
+    </script>
+</head>
+
+<body>
+    <div class="container-fluid h-100">
+        <div class="row h-100">
+            <div class="col h-100">
+                <div id="viewDiv"></div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
