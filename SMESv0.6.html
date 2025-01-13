@@ -28,6 +28,17 @@
             }
             return new Blob([bytes], { type });
         }
+function filterUniqueValues(renderer) {
+    const seenValues = new Set(); // Track unique values
+    renderer.uniqueValueInfos = renderer.uniqueValueInfos.filter(info => {
+        if (seenValues.has(info.value)) {
+            return false; // Skip duplicate
+        }
+        seenValues.add(info.value);
+        return true; // Keep unique
+    });
+}
+        
         require([
             "esri/config",
             "esri/WebMap",
@@ -108,7 +119,7 @@
                         label: "SCN (GDA) & Adjusted AHD mark ",
                         symbol: {
                             type: "picture-marker",
-                            url: "https://clstoragea.blob.core.windows.net/chris/SCNAdjusted.png",
+                            url: "https://clstoragea.blob.core.windows.net/chris/SCNADH.png",
                         }
                     },
                     {
