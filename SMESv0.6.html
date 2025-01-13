@@ -37,12 +37,12 @@
             "esri/layers/FeatureLayer",
             "esri/core/reactiveUtils",
             "esri/widgets/Search",
-            "esri/widgets/Track",
+            "esri/widgets/Locate",
             "esri/widgets/LayerList",
             "esri/widgets/Legend",
             "esri/layers/support/FeatureFilter",
             "esri/form/elements/inputs/SwitchInput",
-        ], function (esriConfig, WebMap, MapView, FeatureLayer, reactiveUtils, Search, Track, LayerList, Legend, FeatureFilter, SwitchInput) {  
+        ], function (esriConfig, WebMap, MapView, FeatureLayer, reactiveUtils, Search, Locate, LayerList, Legend, FeatureFilter, SwitchInput) {  
            
             const SimpleRenderer = {
                 type: "simple",
@@ -52,15 +52,6 @@
                     width: "2px",
                             }
                               };
-
-             const trackWidget = new Track({
-        view: view,
-        goToLocationEnabled: true // Optionally enable zooming to user's location
-    });
-
-    // Add the Track widget to the view's UI
-    view.ui.add(trackWidget, "top-right");
-});
             
             const uniqueValueRenderer = {
                 type: "unique-value",
@@ -258,7 +249,7 @@
 
 
             const parcel = new FeatureLayer({
-                url: "https://services6.arcgis.com/GB33F62SbDxJjwEL/ArcGIS/rest/services/Vicmap_Parcel/FeatureServer/0",
+                url: "https://enterprise.mapshare.vic.gov.au/server/rest/services/Vicmap_Parcel/MapServer/0",
                 minScale: 5000,
                 renderer: SimpleRenderer,
                 labelingInfo: [labelprop]
