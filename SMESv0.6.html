@@ -37,12 +37,12 @@
             "esri/layers/FeatureLayer",
             "esri/core/reactiveUtils",
             "esri/widgets/Search",
-            "esri/widgets/Locate",
+            "esri/widgets/Track",
             "esri/widgets/LayerList",
             "esri/widgets/Legend",
             "esri/layers/support/FeatureFilter",
             "esri/form/elements/inputs/SwitchInput",
-        ], function (esriConfig, WebMap, MapView, FeatureLayer, reactiveUtils, Search, Locate, LayerList, Legend, FeatureFilter, SwitchInput) {  
+        ], function (esriConfig, WebMap, MapView, FeatureLayer, reactiveUtils, Search, Track, LayerList, Legend, FeatureFilter, SwitchInput) {  
            
             const SimpleRenderer = {
                 type: "simple",
@@ -52,6 +52,15 @@
                     width: "2px",
                             }
                               };
+
+             const trackWidget = new Track({
+        view: view,
+        goToLocationEnabled: true // Optionally enable zooming to user's location
+    });
+
+    // Add the Track widget to the view's UI
+    view.ui.add(trackWidget, "top-right");
+});
             
             const uniqueValueRenderer = {
                 type: "unique-value",
