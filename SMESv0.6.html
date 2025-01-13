@@ -53,11 +53,12 @@
                             }
                               };
 
-             const trackWidget = new Track({
+    // Add the Track widget to the view
+    const trackWidget = new Track({
         view: view,
-        goToLocationEnabled: true // Optionally enable zooming to user's location
+        goToLocationEnabled: true // Automatically zoom to location
     });
-
+            
     // Add the Track widget to the view's UI
     view.ui.add(trackWidget, "top-right");
 });
