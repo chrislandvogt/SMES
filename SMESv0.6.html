@@ -29,6 +29,7 @@
             return new Blob([bytes], { type });
         }
 
+        
         require([
             "esri/config",
             "esri/WebMap",
@@ -42,15 +43,16 @@
             "esri/layers/support/FeatureFilter",
             "esri/form/elements/inputs/SwitchInput",
         ], function (esriConfig, WebMap, MapView, FeatureLayer, reactiveUtils, Search, Locate, LayerList, Legend, FeatureFilter, SwitchInput) {  
+           
             const SimpleRenderer = {
                 type: "simple",
-                symbol: {
+                  symbol: {
                     type: "simple-line",
                     color: "rgba(0,76,115,0)",
                     width: "2px",
-                }
-            };
-
+                            }
+                              };
+            
             const uniqueValueRenderer = {
                 type: "unique-value",
                 field: "symbol",
@@ -181,8 +183,9 @@
             const navigateAction = {
                 title: "Navigate To",
                 id: "navigate-to",
-                className: "esri-icon-directions" // This assumes there's a 'directions' icon in Esri's icon set. Adjust as needed.
+                className: "esri-icon-directions"  // This assumes there's a 'directions' icon in Esri's icon set. Adjust as needed.
             };
+
 
             const popupTemplate = {
                 "title": "PM Details",
@@ -216,7 +219,7 @@
                         },
                         {
                             fieldName: "GDA94_UNCERTAINTY",
-                            label: "Horizontal uncertainty",
+                            label: "Horzizontal uncertainty",
                             format: {
                                 places: 3
                             }
@@ -230,7 +233,9 @@
                         },
                     ]
                 }],
+                "actions": [downloadPdfAction],
                 "actions": [downloadPdfAction, navigateAction]
+
             };
 
             const SMES = new FeatureLayer({
@@ -242,6 +247,7 @@
                 labelingInfo: [labelsmes]
             });
 
+
             const parcel = new FeatureLayer({
                 url: "https://services6.arcgis.com/GB33F62SbDxJjwEL/ArcGIS/rest/services/Vicmap_Parcel/FeatureServer/0",
                 minScale: 5000,
@@ -250,8 +256,9 @@
             });
 
             const webmap = new WebMap({
-                basemap: "topo-vector"
-            });
+                    basemap: "topo-vector"
+                });
+
 
             webmap.add(SMES);
             webmap.add(parcel);
@@ -261,82 +268,221 @@
                 map: webmap,
                 center: [144.95608778666826,-37.79451232606005], // Longitude, Latitude for Parkville
                 zoom: 18
-            });
+});
 
             view.ui.move("zoom", "top-right");
 
-            // Dynamic Legend with extent filtering
-            const legend = new Legend({
-                view: view,
-                layerInfos: [{
-                    layer: SMES,
-                    title: "Survey Marks"
-                }]
-            });
-            view.ui.add(legend, "bottom-left");
 
-            reactiveUtils.watch(
-                () => view.extent,
-                () => {
-                    view.whenLayerView(SMES).then((layerView) => {
-                        layerView.filter = new FeatureFilter({
-                            geometry: view.extent
-                        });
-                        console.log("Layer filtered to current extent.");
-                    });
+// Creating switchContainer
+const switchContainer = document.createElement("div");
+switchContainer.style.position = "absolute";
+switchContainer.style.bottom = "60px";
+switchContainer.style.right = "25px";
+switchContainer.style.background = "rgba(255,255,255,0.7)";
+switchContainer.style.padding = "10px";
+switchContainer.style.zIndex = "1";
+document.body.appendChild(switchContainer);
+
+// Creating first switch
+const switchDiv1 = document.createElement("div");
+const switchLabel1 = document.createElement('label');
+switchLabel1.innerHTML = "AHD levelling only";
+const switchInput1 = document.createElement('input');
+switchInput1.type = "checkbox";
+switchInput1.id = "toggleLayer1";
+switchDiv1.appendChild(switchInput1);
+switchDiv1.appendChild(switchLabel1);
+switchContainer.appendChild(switchDiv1);
+switchLabel1.style.fontSize = "12px"; 
+
+// Event listener for first switch
+view.whenLayerView(SMES).then(function (featureLayerView) {
+    switchInput1.addEventListener("change", function () {
+        if (switchInput1.checked) {
+            featureLayerView.filter = new FeatureFilter({
+                where: "V_ORDER >= 1 AND V_ORDER <= 3 AND status = 'OK'"
+            });
+        } else {
+            featureLayerView.filter = null;
+        }
+    });
+});
+
+// Creating second switch
+const switchDiv2 = document.createElement("div");
+const switchLabel2 = document.createElement('label');
+switchLabel2.innerHTML = "Coordinated MGA/SCN only";
+const switchInput2 = document.createElement('input');
+switchInput2.type = "checkbox";
+switchInput2.id = "toggleLayer2";
+switchDiv2.appendChild(switchInput2);
+switchDiv2.appendChild(switchLabel2);
+switchContainer.appendChild(switchDiv2);
+switchLabel2.style.fontSize = "12px";
+
+// Event listener for second switch
+view.whenLayerView(SMES).then(function (featureLayerView) {
+    switchInput2.addEventListener("change", function () {
+        if (switchInput2.checked) {
+            featureLayerView.filter = new FeatureFilter({
+                where: "scn_gda = 'YES' AND status = 'OK'"
+            });
+        } else {
+            featureLayerView.filter = null;
+        }
+    });
+});
+
+// Creating third switch
+const switchDiv3 = document.createElement("div");
+const switchLabel3 = document.createElement('label');
+switchLabel3.innerHTML = "Hide defective marks";
+const switchInput3 = document.createElement('input');
+switchInput3.type = "checkbox";
+switchInput3.id = "toggleLayer3";
+switchInput3.checked = true; // Set the switch on by default
+switchDiv3.appendChild(switchInput3);
+switchDiv3.appendChild(switchLabel3);
+switchContainer.appendChild(switchDiv3);
+switchLabel3.style.fontSize = "12px";
+
+// Event listener for third switch
+view.whenLayerView(SMES).then(function (featureLayerView) {
+    // Apply the filter right away since the switch is on by default
+    featureLayerView.filter = new FeatureFilter({
+        where: "symbol <> 'D'"
+    });
+
+    switchInput3.addEventListener("change", function () {
+        if (switchInput3.checked) {
+            featureLayerView.filter = new FeatureFilter({
+                where: "symbol <> 'D'"
+            });
+        } else {
+            featureLayerView.filter = null;
+        }
+    });
+});
+
+
+
+                            // Append the switch container to the body
+                            document.body.appendChild(switchContainer);
+
+
+                            var legend = new Legend({
+                                view: view,
+                                layerInfos: [{
+                                    layer: SMES,
+                                    title: " "
+                                }]
+                                });
+                                view.ui.add(legend, "bottom-left");
+
+                                var searchWidget = new Search({
+    view: view,
+    allPlaceholder: "Address or PM name",
+    includeDefaultSources: true, // Set this to false if you don't want to include the default search sources
+    maxSuggestions: 2,
+    sources: [
+        {
+            layer: SMES,
+            searchFields: ["name"],
+            displayField: "name",
+            name: "Survey marks",
+            exactMatch: false,
+            outFields: ["*"],
+            placeholder: "Search by survey mark name",
+        },
+    ]
+});
+
+view.ui.add(searchWidget, "top-left");
+
+
+            const locate = new Locate({
+                view: view,
+                rotationEnabled: false,
+                goToOverride: function(view, options) {
+                    options.target.scale = 1500;
+                    return view.goTo(options.target);
+                }
+            });
+
+            view.ui.add(locate, "top-right");
+
+
+// Function to convert the provided DMS format to Decimal
+function convertDMSToDecimal(dms) {
+    if (!dms || typeof dms !== "string") {
+        console.error("Invalid input:", dms);
+        return null;
+    }
+
+    // Check if the input is in DMS format
+    if (dms.includes('.')) {
+        // Extract degrees, minutes, and seconds
+        const degrees = parseInt(dms);
+        const minutes = parseInt((dms * 100) % 100);
+        const seconds = parseFloat(((dms * 10000) % 100).toFixed(2));
+
+        // Convert DMS to Decimal
+        return degrees + (minutes / 60) + (seconds / 3600);
+    } else {
+        // Assume it's already in decimal format
+        return parseFloat(dms);
+    }
+}
+
+reactiveUtils.on(
+    () => view.popup,
+    "trigger-action",
+    (event) => {  
+        const latDMS = view.popup.selectedFeature.attributes.GDA94_LATITUDE_DMS.toString();
+        const lonDMS = view.popup.selectedFeature.attributes.GDA94_LONGITUDE_DMS.toString();
+
+        if (event.action.id === "navigate-to") {
+            const latDecimal = convertDMSToDecimal(latDMS);
+            const lonDecimal = convertDMSToDecimal(lonDMS);
+
+            if (latDecimal !== null && lonDecimal !== null) {
+                const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${latDecimal},${lonDecimal}&travelmode=driving`;
+                window.open(googleMapsUrl, '_blank');
+            } else {
+                console.error("Error converting DMS to decimal format.");
+            }
+        }
+    }
+);
+
+
+
+            reactiveUtils.on(
+                () => view.popup,
+                "trigger-action",
+                (event) => {  
+                    if (event.action.id === "download-pdf") {
+                        const ninefig = view.popup.selectedFeature.attributes.NINE_FIGURE_NO;
+                        const pmnam = view.popup.selectedFeature.attributes.NAME;
+                        fetch(`https://maps.land.vic.gov.au/lvis/services/smesDataDelivery/getSurveyMarkSketches?markList=${ninefig}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                const blobData = base64ToBlob(data.data[0].document);
+                                const link = document.createElement('a');
+                                link.href = URL.createObjectURL(blobData);
+                                link.download = pmnam + ".pdf";
+                                link.click();
+                            })
+                            .catch(error => console.error("There was an error fetching the PDF:", error));
+                    }
                 }
             );
-
-            // Add switches for filtering
-            const switchContainer = document.createElement("div");
-            switchContainer.style.position = "absolute";
-            switchContainer.style.bottom = "60px";
-            switchContainer.style.right = "25px";
-            switchContainer.style.background = "rgba(255,255,255,0.7)";
-            switchContainer.style.padding = "10px";
-            document.body.appendChild(switchContainer);
-
-            const switches = [
-                { label: "AHD levelling only", id: "toggleLayer1", filter: "V_ORDER >= 1 AND V_ORDER <= 3 AND status = 'OK'" },
-                { label: "Coordinated MGA/SCN only", id: "toggleLayer2", filter: "scn_gda = 'YES' AND status = 'OK'" },
-                { label: "Hide defective marks", id: "toggleLayer3", filter: "symbol <> 'D'", checked: true }
-            ];
-
-            switches.forEach(s => {
-                const switchDiv = document.createElement("div");
-                const switchLabel = document.createElement("label");
-                switchLabel.innerHTML = s.label;
-                const switchInput = document.createElement("input");
-                switchInput.type = "checkbox";
-                switchInput.id = s.id;
-                if (s.checked) switchInput.checked = true;
-
-                switchDiv.appendChild(switchInput);
-                switchDiv.appendChild(switchLabel);
-                switchContainer.appendChild(switchDiv);
-
-                view.whenLayerView(SMES).then(layerView => {
-                    if (s.checked) {
-                        layerView.filter = new FeatureFilter({
-                            where: s.filter
-                        });
-                    }
-
-                    switchInput.addEventListener("change", () => {
-                        if (switchInput.checked) {
-                            layerView.filter = new FeatureFilter({
-                                where: s.filter
-                            });
-                        } else {
-                            layerView.filter = null;
-                        }
-                    });
-                });
-            });
         });
     </script>
 </head>
+
 <body>
     <div id="viewDiv"></div>
 </body>
+
 </html>
