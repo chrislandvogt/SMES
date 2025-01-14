@@ -258,9 +258,16 @@
 
             view.ui.move("zoom", "top-right");
 view.when(() => {
+    // Wait for the view to initialize
     const popupContainer = document.querySelector('.esri-popup');
     if (popupContainer) {
-        popupContainer.style.zIndex = '3000'; // Set a high z-index for the popup
+        popupContainer.style.zIndex = '3000'; // Ensure popup stays on top
+    }
+
+    // Adjust z-index of the switch container to stay below the popup
+    const switchContainer = document.querySelector('.filter-container');
+    if (switchContainer) {
+        switchContainer.style.zIndex = '999'; // Lower z-index for switches
     }
 });
 
