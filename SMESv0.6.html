@@ -263,19 +263,13 @@ view.when(() => {
     if (popupContainer) {
         popupContainer.style.zIndex = '3000'; // Ensure popup stays on top
     }
-
-    // Adjust z-index of the switch container to stay below the popup
-    const switchContainer = document.querySelector('.filter-container');
-    if (switchContainer) {
-        switchContainer.style.zIndex = '999'; // Lower z-index for switches
-    }
 });
 
 // Creating switchContainer
 const switchContainer = document.createElement("div");
 switchContainer.style.position = "absolute";
-switchContainer.style.bottom = "60px";
-switchContainer.style.right = "25px";
+switchContainer.style.top = "60px";
+switchContainer.style.left = "25px";
 switchContainer.style.background = "rgba(255,255,255,0.7)";
 switchContainer.style.padding = "10px";
 switchContainer.style.zIndex = "1";
@@ -284,7 +278,7 @@ document.body.appendChild(switchContainer);
 // Creating first switch
 const switchDiv1 = document.createElement("div");
 const switchLabel1 = document.createElement('label');
-switchLabel1.innerHTML = "AHD levelling only";
+switchLabel1.innerHTML = "AHD levelling";
 const switchInput1 = document.createElement('input');
 switchInput1.type = "checkbox";
 switchInput1.id = "toggleLayer1";
@@ -309,7 +303,7 @@ view.whenLayerView(SMES).then(function (featureLayerView) {
 // Creating second switch
 const switchDiv2 = document.createElement("div");
 const switchLabel2 = document.createElement('label');
-switchLabel2.innerHTML = "Coordinated MGA/SCN only";
+switchLabel2.innerHTML = "Coordinated MGA";
 const switchInput2 = document.createElement('input');
 switchInput2.type = "checkbox";
 switchInput2.id = "toggleLayer2";
