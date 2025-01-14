@@ -256,6 +256,27 @@
                 zoom: 18
 });
 
+            view.when(() => {
+    console.log("MapView is ready!");
+
+    // Adjust click tolerance for the SMES layer
+    view.on("click", (event) => {
+        view.hitTest(event, { include: [SMES] }).then((response) => {
+            if (response.results.length) {
+                const feature = response.results[0].graphic;
+
+                // Open the popup
+                view.popup.open({
+                    title: feature.attributes.name,
+                    content: `Details: ${feature.attributes.nine_figure_no}`,
+                    location: event.mapPoint
+                });
+            }
+        });
+    });
+});
+
+
             view.ui.move("zoom", "top-right");
 view.when(() => {
     // Wait for the view to initialize
