@@ -257,7 +257,12 @@
 });
 
             view.ui.move("zoom", "top-right");
-
+view.when(() => {
+    const popupContainer = document.querySelector('.esri-popup');
+    if (popupContainer) {
+        popupContainer.style.zIndex = '3000'; // Set a high z-index for the popup
+    }
+});
 
 // Creating switchContainer
 const switchContainer = document.createElement("div");
